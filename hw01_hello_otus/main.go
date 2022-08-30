@@ -8,6 +8,5 @@ import (
 
 func main() {
 	const original = "Hello, OTUS!"
-	reversed := stringutil.Reverse(original)
-	fmt.Println(reversed)
+	fmt.Println(stringutil.Reverse(original))
 }
