@@ -13,7 +13,7 @@ func Top10(input string) (result []string) {
 		return
 	}
 
-	splitter := regexp.MustCompile("[\\n\\s\\t]+")
+	splitter := regexp.MustCompile(`[\n\s\t]+`)
 	freqMap := make(map[string]int)
 	for _, s := range splitter.Split(input, -1) {
 		if s == "" {
@@ -38,9 +38,8 @@ func Top10(input string) (result []string) {
 	sort.Slice(freqSlice, func(i, j int) bool {
 		if freqSlice[i].count != freqSlice[j].count {
 			return freqSlice[i].count > freqSlice[j].count
-		} else {
-			return freqSlice[i].str < freqSlice[j].str
 		}
+		return freqSlice[i].str < freqSlice[j].str
 	})
 	sliceLength := len(freqSlice)
 	if sliceLength > maxResultSize {
