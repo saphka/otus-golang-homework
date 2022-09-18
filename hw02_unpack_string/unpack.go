@@ -22,7 +22,10 @@ func Unpack(input string) (string, error) {
 		}
 		prev = current
 	}
-	_ = unpackRune(rune(0), prev, &b)
+	err := unpackRune(rune(0), prev, &b)
+	if err != nil {
+		return "", err
+	}
 
 	return b.String(), nil
 }
