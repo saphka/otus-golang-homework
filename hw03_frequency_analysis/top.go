@@ -13,6 +13,19 @@ func Top10(input string) (result []string) {
 		return
 	}
 
+	freqSlice := getFreqSlice(getFreqMap(input))
+	sliceLength := len(freqSlice)
+	if sliceLength > maxResultSize {
+		sliceLength = maxResultSize
+	}
+	for _, freq := range freqSlice[:sliceLength] {
+		result = append(result, freq.str)
+	}
+
+	return result
+}
+
+func getFreqMap(input string) map[string]int {
 	splitter := regexp.MustCompile(`[\n\s\t]+`)
 	freqMap := make(map[string]int)
 	for _, s := range splitter.Split(input, -1) {
@@ -23,11 +36,15 @@ func Top10(input string) (result []string) {
 		count++
 		freqMap[s] = count
 	}
+	return freqMap
+}
 
-	type frequency struct {
-		str   string
-		count int
-	}
+type frequency struct {
+	str   string
+	count int
+}
+
+func getFreqSlice(freqMap map[string]int) []frequency {
 	freqSlice := make([]frequency, 0, len(freqMap))
 	for k, v := range freqMap {
 		freqSlice = append(freqSlice, frequency{
@@ -41,13 +58,5 @@ func Top10(input string) (result []string) {
 		}
 		return freqSlice[i].str < freqSlice[j].str
 	})
-	sliceLength := len(freqSlice)
-	if sliceLength > maxResultSize {
-		sliceLength = maxResultSize
-	}
-	for _, freq := range freqSlice[:sliceLength] {
-		result = append(result, freq.str)
-	}
-
-	return result
+	return freqSlice
 }
