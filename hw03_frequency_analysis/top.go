@@ -7,6 +7,8 @@ import (
 
 const maxResultSize = 10
 
+var splitter = regexp.MustCompile(`[\n\s\t]+`)
+
 func Top10(input string) (result []string) {
 	result = make([]string, 0, maxResultSize)
 	if input == "" {
@@ -26,15 +28,12 @@ func Top10(input string) (result []string) {
 }
 
 func getFreqMap(input string) map[string]int {
-	splitter := regexp.MustCompile(`[\n\s\t]+`)
 	freqMap := make(map[string]int)
 	for _, s := range splitter.Split(input, -1) {
 		if s == "" {
 			continue
 		}
-		count := freqMap[s]
-		count++
-		freqMap[s] = count
+		freqMap[s]++
 	}
 	return freqMap
 }
