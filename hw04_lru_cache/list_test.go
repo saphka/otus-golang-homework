@@ -15,6 +15,73 @@ func TestList(t *testing.T) {
 		require.Nil(t, l.Back())
 	})
 
+	t.Run("remove head", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(10)
+		l.PushBack(20)
+		l.PushBack(30)
+
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 10, l.Front().Value)
+		require.Equal(t, 30, l.Back().Value)
+
+		l.Remove(l.Front())
+
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, 20, l.Front().Value)
+	})
+
+	t.Run("remove tail", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(40)
+		l.PushBack(50)
+		l.PushBack(60)
+
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 40, l.Front().Value)
+		require.Equal(t, 60, l.Back().Value)
+
+		l.Remove(l.Back())
+
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, 50, l.Back().Value)
+	})
+
+	t.Run("remove center", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(70)
+		l.PushBack(80)
+		l.PushBack(90)
+
+		require.Equal(t, 3, l.Len())
+		require.Equal(t, 70, l.Front().Value)
+		require.Equal(t, 80, l.Front().Next.Value)
+		require.Equal(t, 90, l.Back().Value)
+
+		l.Remove(l.Front().Next)
+
+		require.Equal(t, 2, l.Len())
+		require.Equal(t, 70, l.Front().Value)
+		require.Equal(t, 90, l.Back().Value)
+		require.Equal(t, l.Front().Next, l.Back())
+	})
+
+	t.Run("remove single", func(t *testing.T) {
+		l := NewList()
+
+		l.PushFront(100)
+
+		require.Equal(t, 1, l.Len())
+		require.Equal(t, 100, l.Front().Value)
+
+		l.Remove(l.Front())
+
+		require.Equal(t, 0, l.Len())
+	})
+
 	t.Run("complex", func(t *testing.T) {
 		l := NewList()
 
