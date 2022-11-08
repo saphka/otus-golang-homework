@@ -125,6 +125,10 @@ func TestRun(t *testing.T) {
 			return numRoutinesBefore == numRoutinesAfter
 		}, 1*time.Second, 100*time.Millisecond, "not all goroutines stopped")
 	})
+}
+
+func TestRunWorkers(t *testing.T) {
+	defer goleak.VerifyNone(t)
 
 	t.Run("negative worker count - sequential", func(t *testing.T) {
 		tasksCount := 50
@@ -185,5 +189,4 @@ func TestRun(t *testing.T) {
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 		require.GreaterOrEqual(t, int64(elapsedTime), int64(sumTime), "tasks were not run sequentially?")
 	})
-
 }
