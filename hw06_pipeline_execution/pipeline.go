@@ -96,7 +96,7 @@ func receiveResult(res Out, done In, out Bi) {
 				case <-done:
 					return
 				case out <- result:
-					//write data
+					// write data
 				}
 			} else {
 				return
