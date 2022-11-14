@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -25,7 +26,7 @@ func TestCopy(t *testing.T) {
 		largeBuf := make([]byte, 1024*1024)
 		f := generateFile(largeBuf)
 
-		dest := path.Join(os.TempDir(), "dest.txt")
+		dest := path.Join(os.TempDir(), "dest_full.txt")
 		err := Copy(f, dest, 0, 0)
 		require.Nil(t, err)
 
@@ -40,7 +41,7 @@ func TestCopy(t *testing.T) {
 		largeBuf := make([]byte, 1024*1024)
 		f := generateFile(largeBuf)
 
-		dest := path.Join(os.TempDir(), "dest.txt")
+		dest := path.Join(os.TempDir(), "dest_offset.txt")
 		err := Copy(f, dest, 35, 0)
 		require.Nil(t, err)
 
@@ -55,7 +56,7 @@ func TestCopy(t *testing.T) {
 		largeBuf := make([]byte, 1024*1024)
 		f := generateFile(largeBuf)
 
-		dest := path.Join(os.TempDir(), "dest.txt")
+		dest := path.Join(os.TempDir(), "dest_offset_limit.txt")
 		err := Copy(f, dest, 35, 42)
 		require.Nil(t, err)
 
@@ -64,6 +65,36 @@ func TestCopy(t *testing.T) {
 		contents, _ := io.ReadAll(destF)
 		_ = destF.Close()
 		require.Equal(t, largeBuf[35:35+42], contents)
+	})
+
+	t.Run("no file copy", func(t *testing.T) {
+		dest := path.Join(os.TempDir(), "dest_dummy.txt")
+		err := Copy("dummy", dest, 0, 0)
+		require.Error(t, err)
+
+		_, err = os.Open(dest)
+		require.Error(t, err)
+		require.True(t, errors.Is(err, os.ErrNotExist))
+	})
+
+	t.Run("dir copy", func(t *testing.T) {
+		dest := path.Join(os.TempDir(), "dest_dir_1.txt")
+		err := Copy(os.TempDir(), dest, 35, 42)
+		require.Error(t, err)
+
+		_, err = os.Open(dest)
+		require.Error(t, err)
+		require.True(t, errors.Is(err, os.ErrNotExist))
+	})
+
+	t.Run("dev random copy", func(t *testing.T) {
+		dest := path.Join(os.TempDir(), "dest_rand_1.txt")
+		err := Copy("/dev/urandom", dest, 35, 42)
+		require.Error(t, err)
+
+		_, err = os.Open(dest)
+		require.Error(t, err)
+		require.True(t, errors.Is(err, os.ErrNotExist))
 	})
 }
 

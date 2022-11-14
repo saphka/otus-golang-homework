@@ -8,9 +8,11 @@ import (
 )
 
 var (
+	ErrUnsupportedFile       = errors.New("unsupported file")
 	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 	ErrNegativeOffset        = errors.New("offset cannot be negative")
 	ErrNegativeLimit         = errors.New("limit cannot be negative")
+	ErrFileIsDirectory       = errors.New("file is a directory")
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
@@ -34,7 +36,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return fmt.Errorf("cannot open file %s: %w", fromPath, err)
 	}
 	var sizeLeft int64
-	if sizeLeft, err = seekOffset(source, offset); err != nil {
+	if sizeLeft, err = positionFile(source, offset); err != nil {
 		return fmt.Errorf("error during seek: %w", err)
 	}
 
@@ -55,11 +57,18 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	return nil
 }
 
-func seekOffset(file *os.File, offset int64) (int64, error) {
+func positionFile(file *os.File, offset int64) (int64, error) {
 	stat, err := file.Stat()
 	if err != nil {
 		return 0, fmt.Errorf("cannot access file details %s: %w", file.Name(), err)
 	}
+	if stat.IsDir() {
+		return 0, ErrFileIsDirectory
+	}
+	if !stat.Mode().IsRegular() {
+		return 0, ErrUnsupportedFile
+	}
+
 	size := stat.Size()
 	if size < offset {
 		return 0, ErrOffsetExceedsFileSize
@@ -112,5 +121,6 @@ func copyContents(source io.Reader, dest io.Writer, limit int64) error {
 			break
 		}
 	}
+	fmt.Println()
 	return nil
 }
