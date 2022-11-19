@@ -30,7 +30,7 @@ func TestRunCmd(t *testing.T) {
 
 		code := RunCmd([]string{"printenv"}, env, in, out, err)
 		require.Zero(t, code)
-		require.NotContainsf(t, out.String(), "USER=", "USER variable must be removed")
+		require.NotContains(t, out.String(), "USER=")
 	})
 
 	t.Run("change var", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestRunCmd(t *testing.T) {
 
 		code := RunCmd([]string{"printenv"}, env, in, out, err)
 		require.Zero(t, code)
-		require.Containsf(t, out.String(), fmt.Sprintf("USER=%s_dummy\n", realUser), "Env must contain new user name")
+		require.Contains(t, out.String(), fmt.Sprintf("USER=%s_dummy\n", realUser))
 	})
 
 	t.Run("change var", func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestRunCmd(t *testing.T) {
 
 		code := RunCmd([]string{"printenv"}, env, in, out, err)
 		require.Zero(t, code)
-		require.Containsf(t, out.String(), "FOO=bar", "Env must contain FOO")
+		require.Contains(t, out.String(), "FOO=bar")
 	})
 
 	t.Run("no command", func(t *testing.T) {
