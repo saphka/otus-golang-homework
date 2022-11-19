@@ -16,7 +16,8 @@ func TestRunCmd(t *testing.T) {
 		out := &strings.Builder{}
 		err := &strings.Builder{}
 
-		RunCmd([]string{"echo", "Hello", "world"}, env, in, out, err)
+		code := RunCmd([]string{"echo", "Hello", "world"}, env, in, out, err)
+		require.Zero(t, code)
 		require.Contains(t, "Hello world\n", out.String())
 	})
 
@@ -27,7 +28,8 @@ func TestRunCmd(t *testing.T) {
 		out := &strings.Builder{}
 		err := &strings.Builder{}
 
-		RunCmd([]string{"printenv"}, env, in, out, err)
+		code := RunCmd([]string{"printenv"}, env, in, out, err)
+		require.Zero(t, code)
 		require.NotContainsf(t, out.String(), "USER=", "USER variable must be removed")
 	})
 
@@ -40,7 +42,8 @@ func TestRunCmd(t *testing.T) {
 		out := &strings.Builder{}
 		err := &strings.Builder{}
 
-		RunCmd([]string{"printenv"}, env, in, out, err)
+		code := RunCmd([]string{"printenv"}, env, in, out, err)
+		require.Zero(t, code)
 		require.Containsf(t, out.String(), fmt.Sprintf("USER=%s_dummy\n", realUser), "Env must contain new user name")
 	})
 
@@ -53,7 +56,16 @@ func TestRunCmd(t *testing.T) {
 		out := &strings.Builder{}
 		err := &strings.Builder{}
 
-		RunCmd([]string{"printenv"}, env, in, out, err)
+		code := RunCmd([]string{"printenv"}, env, in, out, err)
+		require.Zero(t, code)
 		require.Containsf(t, out.String(), "FOO=bar", "Env must contain FOO")
+	})
+
+	t.Run("no command", func(t *testing.T) {
+		in := bytes.NewReader([]byte{})
+		out := &strings.Builder{}
+		err := &strings.Builder{}
+		code := RunCmd([]string{"some_dummy_coomand"}, make(Environment), in, out, err)
+		require.NotZero(t, code)
 	})
 }
