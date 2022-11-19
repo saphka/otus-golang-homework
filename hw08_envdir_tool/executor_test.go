@@ -23,6 +23,8 @@ func TestRunCmd(t *testing.T) {
 	})
 
 	t.Run("remove var", func(t *testing.T) {
+		_, ok := os.LookupEnv("USER")
+		require.True(t, ok)
 		env := make(Environment)
 		env["USER"] = EnvValue{NeedRemove: true}
 		in := bytes.NewReader([]byte{})
@@ -31,13 +33,13 @@ func TestRunCmd(t *testing.T) {
 
 		code := RunCmd([]string{"printenv"}, env, in, out, err)
 		require.Zero(t, code)
-		require.NotContains(t, out.String(), "USER=")
+		require.NotContains(t, out.String(), "\nUSER=")
 	})
 
 	t.Run("change var", func(t *testing.T) {
-		env := make(Environment)
 		realUser, ok := os.LookupEnv("USER")
 		require.True(t, ok)
+		env := make(Environment)
 		env["USER"] = EnvValue{Value: realUser + "_dummy"}
 		in := bytes.NewReader([]byte{})
 		out := &strings.Builder{}
@@ -48,10 +50,10 @@ func TestRunCmd(t *testing.T) {
 		require.Contains(t, out.String(), fmt.Sprintf("USER=%s_dummy\n", realUser))
 	})
 
-	t.Run("change var", func(t *testing.T) {
-		env := make(Environment)
+	t.Run("add var", func(t *testing.T) {
 		_, ok := os.LookupEnv("FOO")
 		require.False(t, ok)
+		env := make(Environment)
 		env["FOO"] = EnvValue{Value: "bar"}
 		in := bytes.NewReader([]byte{})
 		out := &strings.Builder{}
