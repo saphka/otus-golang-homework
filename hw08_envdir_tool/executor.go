@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,18 +19,21 @@ func RunCmd(cmd []string, env Environment, stdin io.Reader, stdout io.Writer, st
 	if len(cmd) < 1 {
 		return BadArgumentErrorCode
 	}
-	command := exec.Command(cmd[0], cmd[1:]...)
+	name := cmd[0]
+	args := cmd[1:]
+
+	command := exec.Command(name, args...)
 	command.Stdin = stdin
 	command.Stdout = stdout
 	command.Stderr = stderr
 	command.Env = prepareEnv(env)
 
 	if err := command.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if ok := errors.As(err, &exitErr); ok {
 			return exitErr.ExitCode()
-		} else {
-			return CommandRunError
 		}
+		return CommandRunError
 	}
 	return 0
 }

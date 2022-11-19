@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -36,7 +37,7 @@ func ReadDir(dir string) (Environment, error) {
 			continue
 		}
 
-		file, err := os.Open(entry.Name())
+		file, err := os.Open(path.Join(dir, entry.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -60,7 +61,7 @@ func readFile(file *os.File) (EnvValue, error) {
 		return EnvValue{}, err
 	}
 
-	line = bytes.Replace(line, []byte{0x00}, []byte("\n"), -1)
+	line = bytes.ReplaceAll(line, []byte{0x00}, []byte("\n"))
 	result := strings.TrimRight(string(line), " \t")
 	return EnvValue{Value: result}, nil
 }
