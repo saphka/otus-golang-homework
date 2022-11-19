@@ -49,10 +49,7 @@ func Copy(fromPath, toPath string, offset, limit int64) (finalErr error) {
 	if limit == 0 || limit > sizeLeft {
 		limit = sizeLeft
 	}
-	if err = copyContents(source, dest, limit); err != nil {
-		return err
-	}
-	return nil
+	return copyContents(source, dest, limit)
 }
 
 func positionFile(file *os.File, offset int64) (int64, error) {
