@@ -15,7 +15,7 @@ var (
 	ErrFileIsDirectory       = errors.New("file is a directory")
 )
 
-func Copy(fromPath, toPath string, offset, limit int64) error {
+func Copy(fromPath, toPath string, offset, limit int64) (finalErr error) {
 	if offset < 0 {
 		return ErrNegativeOffset
 	}
@@ -23,36 +23,34 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return ErrNegativeLimit
 	}
 
-	var (
-		source, dest *os.File
-		err          error
-	)
-
-	source, err = os.Open(fromPath)
-	defer func(source io.Closer) {
-		_ = source.Close()
-	}(source)
+	source, err := os.Open(fromPath)
 	if err != nil {
-		return fmt.Errorf("cannot open file %s: %w", fromPath, err)
+		return err
 	}
+	defer func() {
+		_ = source.Close()
+	}()
 	var sizeLeft int64
 	if sizeLeft, err = positionFile(source, offset); err != nil {
-		return fmt.Errorf("error during seek: %w", err)
+		return err
 	}
 
-	dest, err = os.Create(toPath)
-	defer func(dest io.Closer) {
-		_ = dest.Close()
-	}(dest)
+	dest, err := os.Create(toPath)
 	if err != nil {
-		return fmt.Errorf("cannot create file %s: %w", toPath, err)
+		return err
 	}
+	defer func() {
+		err := dest.Close()
+		if err != nil && finalErr == nil {
+			finalErr = err
+		}
+	}()
 
 	if limit == 0 || limit > sizeLeft {
 		limit = sizeLeft
 	}
 	if err = copyContents(source, dest, limit); err != nil {
-		return fmt.Errorf("error in copy: %w", err)
+		return err
 	}
 	return nil
 }
@@ -60,7 +58,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 func positionFile(file *os.File, offset int64) (int64, error) {
 	stat, err := file.Stat()
 	if err != nil {
-		return 0, fmt.Errorf("cannot access file details %s: %w", file.Name(), err)
+		return 0, err
 	}
 	if stat.IsDir() {
 		return 0, ErrFileIsDirectory
@@ -75,7 +73,7 @@ func positionFile(file *os.File, offset int64) (int64, error) {
 	}
 	_, err = file.Seek(offset, io.SeekStart)
 	if err != nil {
-		return 0, fmt.Errorf("cannot seek to offset %d: %w", offset, err)
+		return 0, err
 	}
 	return size - offset, nil
 }
