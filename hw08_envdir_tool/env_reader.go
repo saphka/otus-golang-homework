@@ -37,11 +37,7 @@ func ReadDir(dir string) (Environment, error) {
 			continue
 		}
 
-		file, err := os.Open(path.Join(dir, entry.Name()))
-		if err != nil {
-			return nil, err
-		}
-		value, err := readFile(file)
+		value, err := readFile(path.Join(dir, entry.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -50,7 +46,11 @@ func ReadDir(dir string) (Environment, error) {
 	return result, nil
 }
 
-func readFile(file *os.File) (EnvValue, error) {
+func readFile(fileName string) (EnvValue, error) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return EnvValue{}, err
+	}
 	defer func() {
 		_ = file.Close()
 	}()

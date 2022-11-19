@@ -42,28 +42,25 @@ const envNameValueSeparator = "="
 
 func prepareEnv(envModifier Environment) []string {
 	originalEnv := os.Environ()
-	resultEnv := make([]string, 0, len(originalEnv))
-	skip := make(map[string]struct{}, len(envModifier))
+	resultEnvMap := make(Environment, len(originalEnv)) // make copy to avoid modifying function argument
+	for name, value := range envModifier {
+		resultEnvMap[name] = value
+	}
+
 	for _, originalEnvVar := range originalEnv {
-		name := strings.SplitN(originalEnvVar, envNameValueSeparator, 2)[0]
-		if modifier, ok := envModifier[name]; ok {
-			if modifier.NeedRemove {
-				continue
-			}
-			resultEnv = append(resultEnv, fmt.Sprintf("%s%s%s", name, envNameValueSeparator, modifier.Value))
-			skip[name] = struct{}{}
-		} else {
-			resultEnv = append(resultEnv, originalEnvVar)
+		split := strings.SplitN(originalEnvVar, envNameValueSeparator, 2)
+		name, value := split[0], split[1]
+		_, ok := resultEnvMap[name]
+		if !ok {
+			resultEnvMap[name] = EnvValue{Value: value}
 		}
 	}
-	for name, value := range envModifier {
-		if _, ok := skip[name]; ok {
-			continue
+
+	resultEnv := make([]string, 0, len(resultEnvMap))
+	for name, value := range resultEnvMap {
+		if !value.NeedRemove {
+			resultEnv = append(resultEnv, fmt.Sprintf("%s%s%s", name, envNameValueSeparator, value.Value))
 		}
-		if value.NeedRemove {
-			continue
-		}
-		resultEnv = append(resultEnv, fmt.Sprintf("%s%s%s", name, envNameValueSeparator, value.Value))
 	}
 
 	return resultEnv
