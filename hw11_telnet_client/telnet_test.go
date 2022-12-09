@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"context"
+	"io"
 	"net"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -29,7 +31,7 @@ func TestTelnetClient(t *testing.T) {
 			timeout, err := time.ParseDuration("10s")
 			require.NoError(t, err)
 
-			client := NewTelnetClient(l.Addr().String(), timeout, ioutil.NopCloser(in), out)
+			client := NewTelnetClient(l.Addr().String(), timeout, io.NopCloser(in), out)
 			require.NoError(t, client.Connect())
 			defer func() { require.NoError(t, client.Close()) }()
 
@@ -61,5 +63,71 @@ func TestTelnetClient(t *testing.T) {
 		}()
 
 		wg.Wait()
+	})
+
+	t.Run("client says goodbye", func(t *testing.T) {
+		l, err := net.Listen("tcp", "127.0.0.1:")
+		require.NoError(t, err)
+		defer func() { require.NoError(t, l.Close()) }()
+
+		var wg, sendWg sync.WaitGroup
+		wg.Add(2)
+		sendWg.Add(1)
+
+		in := &bytes.Buffer{}
+		out := &bytes.Buffer{}
+
+		data := []string{"I\n", "Am\n", "Telnet\n", "Client\n"}
+		for _, s := range data {
+			in.WriteString(s)
+		}
+		dataString := strings.Join(data, "")
+
+		go func() {
+			defer wg.Done()
+
+			timeout, err := time.ParseDuration("10s")
+			require.NoError(t, err)
+
+			client := NewTelnetClient(l.Addr().String(), timeout, io.NopCloser(in), out)
+			require.NoError(t, client.Connect())
+			defer func() {
+				require.NoError(t, client.Close())
+			}()
+
+			ctx, stop := context.WithCancel(context.Background())
+			defer stop()
+			client.Start(ctx, stop)
+
+			<-ctx.Done()
+
+			require.ErrorIs(t, ctx.Err(), context.Canceled)
+			sendWg.Done()
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			conn, err := l.Accept()
+			require.NoError(t, err)
+			require.NotNil(t, conn)
+			defer func() { require.NoError(t, conn.Close()) }()
+			sendWg.Wait()
+
+			request := make([]byte, 1024)
+			n, err := conn.Read(request)
+			require.NoError(t, err)
+			actual := string(request)[:n]
+			require.Equal(t, dataString+"Bye-bye\n", actual)
+
+			n, err = conn.Write([]byte("See you\n"))
+			require.NoError(t, err)
+			require.Positive(t, n)
+
+		}()
+		wg.Wait()
+
+		require.Empty(t, out.String())
+
 	})
 }
