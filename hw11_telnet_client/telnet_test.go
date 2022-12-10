@@ -74,17 +74,18 @@ func TestTelnetClient(t *testing.T) {
 		wg.Add(2)
 		sendWg.Add(1)
 
-		in := &bytes.Buffer{}
-		out := &bytes.Buffer{}
-
 		data := []string{"I\n", "Am\n", "Telnet\n", "Client\n"}
-		for _, s := range data {
-			in.WriteString(s)
-		}
 		dataString := strings.Join(data, "")
 
 		go func() {
 			defer wg.Done()
+
+			in := &bytes.Buffer{}
+			out := &bytes.Buffer{}
+
+			for _, s := range data {
+				in.WriteString(s)
+			}
 
 			timeout, err := time.ParseDuration("10s")
 			require.NoError(t, err)
@@ -123,11 +124,7 @@ func TestTelnetClient(t *testing.T) {
 			n, err = conn.Write([]byte("See you\n"))
 			require.NoError(t, err)
 			require.Positive(t, n)
-
 		}()
 		wg.Wait()
-
-		require.Empty(t, out.String())
-
 	})
 }
