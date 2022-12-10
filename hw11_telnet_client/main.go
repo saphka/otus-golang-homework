@@ -23,7 +23,8 @@ func main() {
 	}()
 
 	if err := telnet.Connect(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT)
@@ -34,7 +35,6 @@ func main() {
 		if err := telnet.Send(); err != nil {
 			log.Println(err)
 		}
-
 	}()
 	go func() {
 		defer stop()
